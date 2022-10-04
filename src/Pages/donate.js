@@ -6,13 +6,18 @@ import {
     getAssociatedTokenAddress,
     TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-
+import kp from '../keypair.json'
 export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress}) =>{
 
     let getBinaryFromWalletAddress = new PublicKey('B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM') //B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM //6xxbFNeTtygiMtYXQEy846n5U9Q6bTmwFtUmje9kBHoS
     //5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF
     // console.log(getBinary.toString())
-   
+
+    let arr = Object.values(kp._keypair.secretKey)
+    // arr=arr.slice(0,32)
+    const secret = new Uint8Array(arr)
+    let ownerkey = web3.Keypair.fromSecretKey(secret) 
+   console.log('owner',ownerkey.publicKey.toString())
     // const initialize = async() =>{
     //     const provider = getProvider()
     //     const program = new Program(idl,programID,provider)
@@ -62,7 +67,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
     // const provider = getProvider();
       // console.log("get wallet keypair", provider.wallet.signMessage());
     // console.log('web3',new web3.Transaction())
-    // console.log("get wallet user keypair", patreonNewkeyPair.publicKey.toString(),);
+    console.log("get wallet user keypair", patreonNewkeyPair.publicKey.toString(),);
 
     const transfer_token = async () => {
 
@@ -72,7 +77,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
         console.log("get wallet user keypair", patreonNewkeyPair.publicKey.toString());
         const program = new Program(idl, programID, provider);
         const mintKeypair = new PublicKey(
-          "5QAjyVMwZS3E3TZgYHSFJVnDe6w4Rx5MkP8vsNoXjnKY"
+          "9GBmKXH3RqfB69UZtXx13x7BxJDXDRHNfRAVHLVDM8KU"
         );
         // const transaction = new web3.Transaction();
         // const { signature } = await provider.signTransaction(transaction);
@@ -102,9 +107,9 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
               rent: SYSVAR_RENT_PUBKEY,
               associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             },
-            // signers: [patreonNewkeyPair],
+            signers: [ownerkey],
           });
-          console.log("donate tx success", tx);
+          console.log("donate tx success", await tx);
         } catch (err) {
           console.log(err);
         }

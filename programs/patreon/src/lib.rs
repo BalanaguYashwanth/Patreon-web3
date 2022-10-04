@@ -183,7 +183,7 @@ pub struct TransferNft<'info>{
     // pub owner_authority: Pubkey,
     /// CHECK: We're about to create this with Anchor
     #[account(mut)]
-    pub token_holder:AccountInfo<'info>, //signer
+    pub token_holder:Signer<'info,>, //signer
     #[account(mut)]
     pub buyer_token_account: UncheckedAccount<'info>, //UncheckedAccount<'info>,
     #[account(mut)]
