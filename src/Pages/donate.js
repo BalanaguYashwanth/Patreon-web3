@@ -1,159 +1,218 @@
-import { PublicKey,SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import { LAMPORTS_PER_SOL, PublicKey,SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 import { utils, web3, Wallet } from '@project-serum/anchor';
 import { BN } from "@project-serum/anchor";
-import {
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    getAssociatedTokenAddress,
-    TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
+import axios from 'axios'
+// import {
+//     ASSOCIATED_TOKEN_PROGRAM_ID,
+//     getAssociatedTokenAddress,
+//     TOKEN_PROGRAM_ID,
+// } from '@solana/spl-token';
 import kp from '../keypair.json'
-export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress}) =>{
+import {
+  AccountLayout,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,NATIVE_MINT,
+  createAssociatedTokenAccountInstruction,
+  getAccount,createInitializeMintInstruction,
+  createMint,getOrCreateAssociatedTokenAccount,
+  mintTo, createAssociatedTokenAccount,
+   getAssociatedTokenAddress, 
+   transfer} from "@solana/spl-token"
+import { useState } from "react";
 
+//main purpose of this flow is - when user starts donate then it initiates i.e createPatreon and get the keys etc and sent to transfer token
+export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress,connection}) =>{
+
+    //get the public hard coded value from the admin, and call this donate from admin might be best rather than calling from body.js
+    const [message, setMessage] = useState('')
     let getBinaryFromWalletAddress = new PublicKey('B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM') //B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM //6xxbFNeTtygiMtYXQEy846n5U9Q6bTmwFtUmje9kBHoS
-    //5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF
+    //5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF //FCt2MtPXj3NtVYW8JCXEDnKJhoJZVdC1vUNp8x5hKFN5
     // console.log(getBinary.toString())
 
-    let arr = Object.values(kp._keypair.secretKey)
-    // arr=arr.slice(0,32)
-    const secret = new Uint8Array(arr)
-    let ownerkey = web3.Keypair.fromSecretKey(secret) 
-   console.log('owner',ownerkey.publicKey.toString())
-    // const initialize = async() =>{
-    //     const provider = getProvider()
-    //     const program = new Program(idl,programID,provider)
-    //      const buffer  = provider.wallet.publicKey
-    //     const [campaign] = await PublicKey.findProgramAddress(
-    //         [
-    //             utils.bytes.utf8.encode("CAMPAIGN_DEMO"),
-    //             provider.wallet.publicKey.toBuffer(),
-    //         ],
-    //         program.programId
-    //     );
-    //     // console.log('campaign',campaign)
-    //     try{
-    //       const tx  = await program.rpc.initialize({accounts:{
-    //         patreonDb:campaign,
-    //         user:walletAddress,
-    //         systemProgram:SystemProgram.programId
-    //       },
-    //      signers:[walletAddress]
-    //       })
-    //       console.log('tx',tx,'campaign',campaign.toString())
-    //     }catch(err){
-    //       console.log(err)
-    //     }
-    //   } 
-    // const provider = getProvider()
-    // console.log('get wallet keypair',provider.publicKey)
+    //tx 46d5kYHMyiXpx7SvKbgG1qsysY9D8K94LxpPvGCBhtnXUKUJibKnEuumWnfdpDKZWjtLdyHw8HMRFBCyzRYab4LJ A2TtqeooiTKDpxyLxGYRJRHC6siEVj9M2V66LKzy8yEY
+
+
+    // let arr = Object.values(kp._keypair.secretKey)
+    // const secret = new Uint8Array(arr)
+    // let ownerkey = web3.Keypair.generate()
+   
+    // console.log('please fund to this - patreonNewkeyPair',patreonNewkeyPair.publicKey.toString())
 
     const donateWallet = async () => {
+      setMessage('Donate process initiating...')
       const provider = getProvider();
       const program = new Program(idl, programID, provider);
       try {
-        const tx = program.rpc.donate(new BN(2 * web3.LAMPORTS_PER_SOL), {
-          accounts: {
-            patreonAccount: getBinaryFromWalletAddress,
-            user: provider.publicKey,
-            systemProgram: SystemProgram.programId,
-          },
-        //   signers: [patreonNewkeyPair],
-        });
-        console.log("donate tx success", tx);
-        transfer_token()
+        const airdropWalletTX  = await connection.requestAirdrop(patreonNewkeyPair.publicKey,(0.0352088)*LAMPORTS_PER_SOL) //if any error occurs change to 1sol
+        setMessage('Donate process initiated... TX',airdropWalletTX)
+        if(airdropWalletTX)
+        {
+          const tx = program.rpc.donate(new BN(2 * web3.LAMPORTS_PER_SOL), {
+            accounts: {
+              patreonAccount: getBinaryFromWalletAddress,
+              user: provider.publicKey,
+              systemProgram: SystemProgram.programId,
+            },
+          //   signers: [patreonNewkeyPair],
+          });
+          setMessage('Donate transaction is success check transaction',await tx)
+          console.log("donate tx success", await tx);
+          if(tx){
+            initializaTokenPDA()
+          }
+        }else{
+          setMessage(`Donate process stopped due to something went wrong... TX - ${airdropWalletTX}, If possible please fund the sol in this wallet ${patreonNewkeyPair.publicKey} and initiate again`)
+          console.log('please fund the sol in this wallet --->',patreonNewkeyPair.publicKey) //convert it as notification
+        }
+        // transfer_token()
       } catch (err) {
         console.log(err);
       }
     };
-    // const provider = getProvider();
-      // console.log("get wallet keypair", provider.wallet.signMessage());
-    // console.log('web3',new web3.Transaction())
-    console.log("get wallet user keypair", patreonNewkeyPair.publicKey.toString(),);
+  
 
-    const transfer_token = async () => {
-
-    
-      
-        const provider = getProvider();
-        console.log("get wallet user keypair", patreonNewkeyPair.publicKey.toString());
-        const program = new Program(idl, programID, provider);
-        const mintKeypair = new PublicKey(
-          "9GBmKXH3RqfB69UZtXx13x7BxJDXDRHNfRAVHLVDM8KU"
-        );
-        // const transaction = new web3.Transaction();
-        // const { signature } = await provider.signTransaction(transaction);
-        // console.log("wallet", walletAddress);
-        const ownerTokenAddress = await utils.token.associatedAddress({
-          mint: mintKeypair,
-          owner: new PublicKey('5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF'),
-        });
-        const buyerTokenAddress = await utils.token.associatedAddress({
-          mint: mintKeypair,
-          owner: provider.publicKey,
-        });
-        console.log('wallet pubkey',provider.publicKey.toString())
-        try {
-          const tx = program.rpc.transferNft({
-            accounts: {
-              buyer: provider.publicKey,
-              seller: new PublicKey('5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF'),
-              tokenHolder:new PublicKey('5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF'),
-              mint: mintKeypair,
-              ownerTokenAccount:ownerTokenAddress,
-            //   ownerAuthority:new PublicKey('5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF'),
-              buyerTokenAccount:buyerTokenAddress,
-              buyerAuthority:provider.publicKey,
-              systemProgram: SystemProgram.programId,
-              tokenProgram: TOKEN_PROGRAM_ID,
-              rent: SYSVAR_RENT_PUBKEY,
-              associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            },
-            signers: [ownerkey],
-          });
-          console.log("donate tx success", await tx);
-        } catch (err) {
-          console.log(err);
-        }
-      };
-
-    //   const transfer_token_frontend = async() =>{
-    //     const transaction = new web3.Transaction().add(
-    //         splToken.Token.createTransferInstruction(
-    //           splToken.TOKEN_PROGRAM_ID,
-    //           fromTokenAccount.address,
-    //           toTokenAccount.address,
-    //           fromWallet.publicKey,
-    //           [],
-    //           1
-    //         )
-    //       );
-          
-    //       // Sign transaction, broadcast, and confirm
-    //       await web3.sendAndConfirmTransaction(connection, transaction, [fromWallet]);
-    //   }
-
-
-      const withdrawWallet = async() =>{
-          const provider = getProvider()
-          const program = new Program(idl,programID,provider)
-          try{
-            const tx = await program.rpc.withdraw(new BN(2 * web3.LAMPORTS_PER_SOL),{
-                accounts:{
-                    patreonAccount:getBinaryFromWalletAddress,
-                      user:walletAddress
-                }
-                })
-                console.log('withdraw tx success',tx)
-          }catch(err){
-              console.log(err)
-          }
+    const initializaTokenPDA = async() =>{  //create the spl tokens to the particular account
+      try{
+      setMessage(`Initiating NFT transferring to your wallet ${walletAddress}`)
+      let transaction = new web3.Transaction()
+      const provider = getProvider()
+      const program = new Program(idl,programID,provider)
+  
+      let mintA = await createMint(connection, patreonNewkeyPair,patreonNewkeyPair.publicKey, null, 0);
+  
+      let myToken_acctA = await getOrCreateAssociatedTokenAccount(connection,patreonNewkeyPair,mintA,patreonNewkeyPair.publicKey)
+      await mintTo(connection,patreonNewkeyPair,mintA,myToken_acctA.address,patreonNewkeyPair.publicKey,1)
+      let amount =1;
+  
+       // state PDA for token
+      const [user_pda_state, bump_state] = await web3.PublicKey.findProgramAddress(
+        [ provider?.wallet?.publicKey?.toBuffer(),myToken_acctA?.address?.toBuffer(),Buffer.from("state")],
+        programID
+      );
+  
+  
+      if(await connection.getAccountInfo(user_pda_state)==null){
+        transaction.add(await program.methods.initializestatepda(bump_state)
+        .accounts({
+          statepda:user_pda_state,
+          owner:walletAddress,
+          depositTokenAccount:myToken_acctA.address,
+          systemProgram: SystemProgram.programId
+        }).signers([patreonNewkeyPair])
+        .instruction())
       }
+
+      // console.log('programId',transaction.programId.toString(),'Initialized TokenPDA to get tokens tx',transaction,'depositTokenAccount',myToken_acctA.address.toString(),'statepda',user_pda_state.toString(),'mint',mintA.toString())
+      setMessage(`Transferring NFT to your wallet ${walletAddress} please wait....`)
+      if(transaction){
+        transfer_token(mintA.toString())
+       }
+      }catch(err){
+        setMessage(`Stopped NFT transferring to your wallet  ${walletAddress}, please try again after sometime`)
+        console.log(err)
+      }
+    }
+
+    const transfer_token = async (mintA) => {
+      setMessage(`Transferred NFT to your wallet ${walletAddress} almost done...`)
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+      const mintKeypair = new PublicKey(
+       mintA
+      );
+      
+      const ownerTokenAddress = await utils.token.associatedAddress({
+        mint: mintKeypair,
+        owner: patreonNewkeyPair.publicKey,
+      });
+      const buyerTokenAddress = await utils.token.associatedAddress({
+        mint: mintKeypair,
+        owner: provider.publicKey,
+      });
+      // console.log('wallet pubkey',provider.publicKey.toString())
+      try {
+        const tx = program.rpc.transferNft({
+          accounts: {
+            buyer: provider.publicKey,
+            seller: patreonNewkeyPair.publicKey,
+            tokenHolder:patreonNewkeyPair.publicKey,
+            mint: mintKeypair,
+            ownerTokenAccount:ownerTokenAddress,
+            buyerTokenAccount:buyerTokenAddress,
+            buyerAuthority:provider.publicKey,
+            systemProgram: SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          },
+          signers: [patreonNewkeyPair],
+        });
+        setMessage(`Transferred NFT to your wallet ${walletAddress} processing.`)
+        console.log("transfer token tx success", await tx);
+        if(tx){
+          tokenVerify(mintA)
+        }
+      } catch (err) {
+        setMessage(`Something went wrong NFT transferring failed please try after sometime`)
+        console.log(err);
+      }
+      // tasks - Store the PDA (2sol walla), name, amount, description ,mediaurl ,token address, owner and seller and date in one record at rust and later to verify them
+    };
+
+
+    const tokenVerify=async(mintA)=>{
+      const provider = getProvider()
+      const program = new Program(idl,programID,provider)
+      try{
+        setMessage(`Transferred NFT to your wallet ${walletAddress} processing.`)
+        let date = new Date( Math.floor(Date.now() / 1000)* 1000);
+        date.setMonth(date.getMonth() + 1);
+        date = Date.parse(date) / 1000;
+        const tx = await program.rpc.verifytoken(patreonNewkeyPair.publicKey,new BN(date),mintA,{
+          accounts:{
+            verifyPatreonTokenDetails:patreonNewkeyPair.publicKey,
+            user:provider.publicKey,
+            systemProgram:SystemProgram.programId
+          },
+          signers:[patreonNewkeyPair]
+        })
+        console.log('tokenVerify tx succesful',tx)
+        setMessage(`Transferred NFT to your wallet ${walletAddress} processed, please check in your wallet after sometime`)
+      }catch(err){
+        console.log(err)
+        setMessage(`Something went wrong please check token in your wallet if not found please try after sometime`)
+      }
+    }
+
+
+    const withdrawWallet = async() =>{
+        const provider = getProvider()
+        const program = new Program(idl,programID,provider)
+        try{
+          const tx = await program.rpc.withdraw(new BN(2 * web3.LAMPORTS_PER_SOL),{
+              accounts:{
+                  patreonAccount:getBinaryFromWalletAddress,
+                    user:walletAddress
+              }
+              })
+              console.log('withdraw tx success',tx)
+        }catch(err){
+            console.log(err)
+        }
+    }
+
+
 
     return(
         <div>
             {/* <button onClick={initialize}> Initialize </button> */} {/* need to replace with createPatreon but exists in another file in pages please check  */} 
-            <button onClick={transfer_token}> Transfer </button>
+            
+           {message && <mark>{message}</mark> }
+            <br />
+            {/* <button onClick={transfer_token}> Transfer </button> */}
             <button onClick={donateWallet}> Donate </button>
             <button onClick={withdrawWallet}> withdraw </button>
+            {/* <button onClick={tokenVerify}> tokenVerify </button> */}
         </div>
     )
 }

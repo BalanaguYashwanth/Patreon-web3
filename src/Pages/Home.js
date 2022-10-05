@@ -30,7 +30,7 @@ function Home() {
     }else{
       alert('phantom not connected')
     }
-  }
+  } 
 
   useEffect(() => {
     // console.log(window.solana)

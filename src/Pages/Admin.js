@@ -37,7 +37,7 @@ const secret = new Uint8Array(arr)
 let patreonNewkeyPair = web3.Keypair.fromSecretKey(secret) //convert in fromSecretkey if doesn't works original - fromSeed
 const connection = new Connection(network, opts.preflightCommitment);
 
-console.log('patreonNewkeyPair',patreonNewkeyPair, 'patreonNewkeyPair user wallet',patreonNewkeyPair.publicKey.toString())
+// console.log('patreonNewkeyPair',patreonNewkeyPair, 'patreonNewkeyPair user wallet',patreonNewkeyPair.publicKey.toString())
 
 export const Admin = () => {
     const [walletAddress, setWalletAddress] = useState("");
@@ -74,7 +74,7 @@ export const Admin = () => {
       )
       return provider
     }
-
+// console.log(walletAddress.toString())
     const submitForm = async() =>{
       try{
         const provider = getProvider()
@@ -86,15 +86,16 @@ export const Admin = () => {
           ],
           program.programId
         );
-        console.log('campaign',campaign.toString())
+        // console.log(campaign,'campaign',campaign.toString())
        const tx = await program.rpc.createPatreon(patreonJson?.name,patreonJson?.description,new BN(patreonJson?.amount *  web3.LAMPORTS_PER_SOL),{
-         accounts:{
+        accounts: {
           patreonDb:campaign,
           user:walletAddress,
           systemProgram:SystemProgram.programId
          }
+        //  ,signers:[patreonNewkeyPair]
        })
-       console.log('tx',tx)
+       console.log('tx',tx,campaign.toString())
       }catch(err){
         console.log('err',err)
       }
@@ -165,8 +166,8 @@ export const Admin = () => {
       }
     }
   };
-
-  const initializaTokenPDA = async() =>{
+//replace signer with wllet sgigner
+  const initializaTokenPDA = async() =>{  //create the spl tokens to the particular account, here - "patreonNewkeyPair" generates the new keypair
     let transaction = new web3.Transaction()
     const provider = getProvider()
     const program = new Program(idl,programID,provider)
@@ -249,7 +250,7 @@ export const Admin = () => {
           CONNECT WALLET
         </button>
       )}
-      <button onClick={initializaTokenPDA} > initializaTokenPDA </button>
+      {/* <button onClick={initializaTokenPDA} > initializaTokenPDA </button> */}
       {Loading && <p> {"loading..."} </p>}
     </div>
   );
