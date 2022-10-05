@@ -137,6 +137,14 @@ pub mod patreon {
         Ok(())
     }
 
+    pub fn verifytoken(ctx:Context<VerifyPatreonDetails>, owner:Pubkey,date:i64,token_address:String) -> ProgramResult{
+         let verify_details  = &mut ctx.accounts.verify_patreon_token_details;
+         verify_details.owner = owner;
+         verify_details.date=date;
+         verify_details.token_address=token_address;
+         Ok(())
+    }
+
 }
 
 
@@ -149,7 +157,6 @@ pub struct CreatePatreon<'info>{
     pub user:Signer<'info>,
     pub system_program:Program<'info,System>
 }
-
 
 #[derive(Accounts)]
 pub struct Withdraw<'info>{
@@ -211,7 +218,27 @@ pub struct Initialisedstatepda<'info> {
     #[account(mut)]
     pub deposit_token_account: Account<'info, TokenAccount>,
     pub system_program: Program<'info,System>,
+}
 
+#[derive(Accounts)]
+pub struct VerifyPatreonDetails<'info,>{
+    #[account(init,payer=user,space=200)]
+    pub verify_patreon_token_details:Account<'info,VerifyPatreonToken>,
+    #[account(mut)]
+    pub user:Signer<'info,>,
+    pub system_program:Program<'info,System>
+}
+
+#[account]
+pub struct VerifyPatreonToken{
+    // name:String,
+    // description:String,
+    // amount:i64,
+    //mediaURL:String,
+    // PDA:String, //where we are transferring account 2 or more sol
+    owner:Pubkey, //patreonkeypair
+    date:i64,
+    token_address:String, //newly created NFT address
 }
 
 #[account]
@@ -220,11 +247,12 @@ pub struct PatreonDB{
     name:String,
     description:String,
     amount:u64,
+    //mediaURL:String,
 }
 
 #[account]
 #[derive(Default)]
 pub struct State {
     bump: u8,
-    amount: u64,           
+    amount: u64,
 }
