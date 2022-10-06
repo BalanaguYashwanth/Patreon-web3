@@ -208,6 +208,56 @@
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "adminDetailsRegistration",
+      "accounts": [
+        {
+          "name": "details",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "contents",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "patreonFundAddress",
+          "type": "publicKey"
+        },
+        {
+          "name": "owner",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -227,6 +277,42 @@
           {
             "name": "tokenAddress",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminDetails",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "contents",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "patreonFundAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
           }
         ]
       }

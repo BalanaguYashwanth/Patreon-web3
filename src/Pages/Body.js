@@ -41,6 +41,8 @@ export const Body = ({walletAddress}) => {
     useEffect(()=>{
       // getAccountInfo()
       // getTransactions()
+      getPatreonDetails()
+      getTokenParsedFromWalletAccounts()
     },[])
 
     const getBalanace=async ()=>{
@@ -126,7 +128,7 @@ export const Body = ({walletAddress}) => {
         console.log(err)
       }
     }
-
+   
     const getTokenParsedFromWalletAccounts = async() =>{
       let allTokens=[]
       try {
@@ -162,6 +164,7 @@ export const Body = ({walletAddress}) => {
     }
     //setMintAddress(allTokens)
   // {getNFTParsedAccounts()}
+    
     const getDataFromVerifyPatreonTokenAccount = async(allTokens) =>{
       const provider = getProvider()
       const program = new Program(idl,programID,provider)
@@ -170,10 +173,13 @@ export const Body = ({walletAddress}) => {
         // console.log(datas.length,allTokens.length)
         if(datas.length>0 && allTokens.length>0){
           for(let x in datas){
+            console.log(datas[x])
             // console.log('now',  new Date( Date.now() * 1000);)
             // console.log('verifytokens',datas[x]?.account.date.toNumber(),datas[x]?.account, datas[x]?.account.date.toNumber(),allTokens.includes(datas[x]?.account?.tokenAddress))
-            if(allTokens.includes(datas[x]?.account?.tokenAddress))
+            // console.log(Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber())
+            if(allTokens.includes(datas[x]?.account?.tokenAddress) && Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber() ) //check this condition again
             {
+              // console.log(datas[x]?.account.date.toNumber())
               setAllow(true)
             }
           }
@@ -183,27 +189,61 @@ export const Body = ({walletAddress}) => {
       }
     }
     //getDataFromVerifyPatreonTokenAccount()
-    getTokenParsedFromWalletAccounts()
+   
+
+    const getPatreonDetails = async () =>{
+      let alldatas=[]
+      const provider = getProvider()
+      const program = new Program(idl,programID,provider)
+      const datas =  await program.account.adminDetails.all()
+      // console.log(datas)
+      for(let i in datas){
+        alldatas.push(datas[i])
+      }
+      setMintAddress(alldatas)
+    }
+
 
   return (
     <div>
       <h4> Your walletAddress - {walletAddress} </h4>
       <br />
+      <h2> <u> List of Patreons </u>  </h2>
+      {
+          mintAddress && mintAddress.map( (mint, index) =>(
+              <div key={index}>
+                <div className="card bg-light mb-3 mx-auto" style={{maxWidth: "30rem"}}>
+                  <div className="card-header"> <b> <u>Patreon Wallet Address </u> </b> {mint.account.patreonFundAddress.toString()}</div>
+                  <div className="card-body">
+                    <h5 className="card-title"> Name - {mint.account.name}</h5>
+                    <p className="card-text"> Description -  {mint.account.description}</p>
+                    {/* <p className="card-text"> {mint.account.contents}</p>
+                    <h5 className="card-title"> {mint.account.url}</h5> */}
+                    <h5 className="card-title"> Amount - { mint.account.amount.toNumber() > LAMPORTS_PER_SOL ? mint.account.amount.toNumber()/LAMPORTS_PER_SOL :mint.account.amount.toNumber()   } SOL +{'0.5 SOL (for tx fees)'} </h5>
+                    <p className="card-text"> Owner - {mint.account.owner.toString()} </p>
+                    {/* <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> */}
+                    <Donate getProvider={getProvider} connection={connection} patreonFundAddressPDA={mint.account.patreonFundAddress.toString()} fundAmount={mint.account.amount.toNumber() > LAMPORTS_PER_SOL ? mint.account.amount.toNumber()/LAMPORTS_PER_SOL :mint.account.amount.toNumber() } Program={Program} idl={idl} programID={programID} patreonNewkeyPair={patreonNewkeyPair} walletAddress={walletAddress} SystemProgram={SystemProgram}  />
+                  </div>
+                </div>
+              
+              </div>
+          ))
+        }
      
      
-      <Donate getProvider={getProvider} connection={connection}  Program={Program} idl={idl} programID={programID} patreonNewkeyPair={patreonNewkeyPair} walletAddress={walletAddress} SystemProgram={SystemProgram}  />
 
-      {mintAddress &&
+      {/* {mintAddress &&
         mintAddress.map(
           (address, index) =>
             address === "8yP77L6mnW3r7fbegeiwR5fps2vuF3xKVZTfwbL31otD" && (
               <div key={index}>
                 <img src="https://i.pinimg.com/originals/13/01/7f/13017f759d2961d07a03190ef28286e7.jpg" />
                 <br />
-                {/* <iframe width="750" height="750" src="https://www.youtube.com/embed/nqye02H_H6I?controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe> */}
+                <iframe width="750" height="750" src="https://www.youtube.com/embed/nqye02H_H6I?controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                 </div>
             )
-        )}
+        )} */}
+        
      { allow &&  <img src="https://i.pinimg.com/originals/13/01/7f/13017f759d2961d07a03190ef28286e7.jpg" />}
       {/* <button onClick={getNFTParsedAccounts}> getNFTParsedAccounts </button>
       <button onClick={getData}> getData </button> */}

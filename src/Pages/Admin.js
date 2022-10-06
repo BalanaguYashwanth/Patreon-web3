@@ -22,7 +22,7 @@ window.Buffer = Buffer
 const programID = new PublicKey(idl?.metadata?.address)
 window.Buffer = Buffer
 const {SystemProgram,Keypair} = web3;
-// const patreonNewkeyPair = Keypair.generate();
+const patreonNewkeyPair = Keypair.generate();
 
 const network = clusterApiUrl("devnet")
 const opts = {
@@ -34,13 +34,14 @@ const opts = {
 let arr = Object.values(kp._keypair.secretKey)
 // arr=arr.slice(0,32)
 const secret = new Uint8Array(arr)
-let patreonNewkeyPair = web3.Keypair.fromSecretKey(secret) //convert in fromSecretkey if doesn't works original - fromSeed
+// let patreonNewkeyPair = web3.Keypair.fromSecretKey(secret) //convert in fromSecretkey if doesn't works original - fromSeed
 const connection = new Connection(network, opts.preflightCommitment);
 
 // console.log('patreonNewkeyPair',patreonNewkeyPair, 'patreonNewkeyPair user wallet',patreonNewkeyPair.publicKey.toString())
 
 export const Admin = () => {
     const [walletAddress, setWalletAddress] = useState("");
+    const [message, setMessage] = useState("");
     const [completeWalletAddress, setCompleteWalletAddress] = useState("")
     const [checkWalletPresent, setCheckWalletPresent] = useState(false)
     const [Loading,setLoading] = useState(false)
@@ -48,7 +49,9 @@ export const Admin = () => {
     const [patreonJson,setPatreonJson] = useState({
       name:'',
       description:'',
-      amount_contributed:''
+      amount_contributed:'',
+      content:'',
+      url:''
     })
 
 
@@ -77,8 +80,10 @@ export const Admin = () => {
 // console.log(walletAddress.toString())
     const submitForm = async() =>{
       try{
+        setMessage('Please approve to Initiate the transaction')
         const provider = getProvider()
         const program = new Program(idl,programID,provider)
+        // console.log(' program.programId', program.programId)
         const [campaign] = await PublicKey.findProgramAddress(
           [
             utils.bytes.utf8.encode("PATREON_DEMO"),
@@ -87,7 +92,8 @@ export const Admin = () => {
           program.programId
         );
         // console.log(campaign,'campaign',campaign.toString())
-       const tx = await program.rpc.createPatreon(patreonJson?.name,patreonJson?.description,new BN(patreonJson?.amount *  web3.LAMPORTS_PER_SOL),{
+        // console.log(patreonJson?.name,patreonJson?.description,patreonJson?.amount_contributed , 'bn last',new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),)
+       const tx = await program.rpc.createPatreon(patreonJson?.name,patreonJson?.description,new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),{
         accounts: {
           patreonDb:campaign,
           user:walletAddress,
@@ -96,8 +102,47 @@ export const Admin = () => {
         //  ,signers:[patreonNewkeyPair]
        })
        console.log('tx',tx,campaign.toString())
+       //insert any code
+       
+
+      if(tx && campaign){
+        registerDetails(campaign)
+      }
+
       }catch(err){
+        setMessage('Something went wrong please try after sometime or try with another wallet')
         console.log('err',err)
+      }
+    }
+    // console.log(patreonNewkeyPair.publicKey.toString())
+    const registerDetails = async (campaignId) =>{
+      console.log(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(2),campaignId,walletAddress)
+      try{
+        setMessage('Please approve for Finalize the transaction')
+        const provider = getProvider()
+        const program = new Program(idl,programID,provider)
+        const tx = await program.rpc.adminDetailsRegistration(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),campaignId,walletAddress,{
+          accounts:{
+            details:patreonNewkeyPair.publicKey,
+            user:walletAddress,
+            systemProgram:SystemProgram.programId
+          },
+          signers:[patreonNewkeyPair]
+        })
+        console.log('tx',tx)
+        if(tx){
+          setMessage('Successfully created your account')
+          setPatreonJson({
+            name:'',
+            description:'',
+            amount_contributed:'',
+            content:'',
+            url:''
+          })
+        }
+      }catch(err){
+        setMessage('Something went wrong at Finalize please try after sometime or try with another wallet')
+        console.log(err)
       }
     }
 
@@ -152,7 +197,6 @@ export const Admin = () => {
   //       setLoading(false)
   //   }
   // };
-
 
   const checkIfPhantomWalletPresent = async() => {
     const { solana } = window;
@@ -240,10 +284,20 @@ export const Admin = () => {
 
       {walletAddress ? (
           <div className="container">
-          <input type="text" className="form-control my-3"  placeholder="Enter Name" onChange={(e)=>setPatreonJson({...patreonJson,name:e.target.value})} />
-          <textarea className="form-control my-3"  rows="3" placeholder='Enter Description' onChange={(e)=>setPatreonJson({...patreonJson, description:e.target.value})} ></textarea>
-          <input type="number" className="form-control my-3"  placeholder="Enter Amount"  onChange={(e)=>setPatreonJson({...patreonJson, amount_contributed:e.target.value})} />
+          <input type="text" className="form-control my-3" value={patreonJson.name}  placeholder="Enter Name" onChange={(e)=>setPatreonJson({...patreonJson,name:e.target.value})} />
+          <textarea className="form-control my-3"  rows="3" value={patreonJson.description} placeholder='Enter Description' onChange={(e)=>setPatreonJson({...patreonJson, description:e.target.value})} ></textarea>
+          
+          <textarea className="form-control my-3"  rows="3" value={patreonJson.content} placeholder='Enter secret content to share with your paid users' onChange={(e)=>setPatreonJson({...patreonJson, content:e.target.value})} ></textarea>
+
+          <input type="text" className="form-control my-3" value={patreonJson.url}  placeholder="Enter secret url to share with your paid users" onChange={(e)=>setPatreonJson({...patreonJson,url:e.target.value})} />
+
+          
+          <input type="number" className="form-control my-3" value={patreonJson.amount_contributed} placeholder="Enter Amount (To be part of your paid community)"  onChange={(e)=>setPatreonJson({...patreonJson, amount_contributed:e.target.value})} />
+          
           <button onClick={submitForm} className='btn btn-secondary my-3'> submit </button>
+          <br/>
+
+          <p> Note- To register you need to have minimun 0.5 SOL in your wallet</p>
         </div>
       ) : (
         <button onClick={connectwallet} className="btn btn-secondary">
@@ -251,6 +305,8 @@ export const Admin = () => {
         </button>
       )}
       {/* <button onClick={initializaTokenPDA} > initializaTokenPDA </button> */}
+      {message}
+      {/* <button onClick={registerDetails} > registerDetails </button> */}
       {Loading && <p> {"loading..."} </p>}
     </div>
   );

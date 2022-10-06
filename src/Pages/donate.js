@@ -21,13 +21,14 @@ import {
 import { useState } from "react";
 
 //main purpose of this flow is - when user starts donate then it initiates i.e createPatreon and get the keys etc and sent to transfer token
-export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress,connection}) =>{
-
+export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress,connection}) =>{
+  // console.log(fundAmount)
     //get the public hard coded value from the admin, and call this donate from admin might be best rather than calling from body.js
     const [message, setMessage] = useState('')
-    let getBinaryFromWalletAddress = new PublicKey('B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM') //B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM //6xxbFNeTtygiMtYXQEy846n5U9Q6bTmwFtUmje9kBHoS
+    let getBinaryFromWalletAddress = new PublicKey(patreonFundAddressPDA) //B2X3R8oTmYB5cV3FBwQ7bbfrc46dhgCJAVmXkDzSurGM //6xxbFNeTtygiMtYXQEy846n5U9Q6bTmwFtUmje9kBHoS
     //5NAbfxgXsVHYc86PFdJBg9zaXQBS5HuRHyLUdCeEzemF //FCt2MtPXj3NtVYW8JCXEDnKJhoJZVdC1vUNp8x5hKFN5
     // console.log(getBinary.toString())
+    //tx 5QZQUgX6o6udbEUKfGJtSX86X5cAJ6znmsYbKZ6erpwbV7fneWEfmv8E5z9XnVBtYgj9cG6yo23S3FmEENoqXicj 7KZpZvf8vRPWhpnnR9DSKhteuLgb8hAwNGwpDHwmyvu4
 
     //tx 46d5kYHMyiXpx7SvKbgG1qsysY9D8K94LxpPvGCBhtnXUKUJibKnEuumWnfdpDKZWjtLdyHw8HMRFBCyzRYab4LJ A2TtqeooiTKDpxyLxGYRJRHC6siEVj9M2V66LKzy8yEY
 
@@ -47,7 +48,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
         setMessage('Donate process initiated... TX',airdropWalletTX)
         if(airdropWalletTX)
         {
-          const tx = program.rpc.donate(new BN(2 * web3.LAMPORTS_PER_SOL), {
+          const tx = program.rpc.donate(new BN(fundAmount * web3.LAMPORTS_PER_SOL), {
             accounts: {
               patreonAccount: getBinaryFromWalletAddress,
               user: provider.publicKey,
@@ -156,6 +157,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
         setMessage(`Something went wrong NFT transferring failed please try after sometime`)
         console.log(err);
       }
+      
       // tasks - Store the PDA (2sol walla), name, amount, description ,mediaurl ,token address, owner and seller and date in one record at rust and later to verify them
     };
 
@@ -168,7 +170,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
         let date = new Date( Math.floor(Date.now() / 1000)* 1000);
         date.setMonth(date.getMonth() + 1);
         date = Date.parse(date) / 1000;
-        const tx = await program.rpc.verifytoken(patreonNewkeyPair.publicKey,new BN(date),mintA,{
+        const tx = await program.rpc.verifytoken(patreonNewkeyPair.publicKey,new BN(date),patreonFundAddressPDA+'-'+mintA,{
           accounts:{
             verifyPatreonTokenDetails:patreonNewkeyPair.publicKey,
             user:provider.publicKey,
@@ -192,7 +194,7 @@ export const Donate = ({getProvider,Program,idl,programID,patreonNewkeyPair,Syst
           const tx = await program.rpc.withdraw(new BN(2 * web3.LAMPORTS_PER_SOL),{
               accounts:{
                   patreonAccount:getBinaryFromWalletAddress,
-                    user:walletAddress
+                  user:walletAddress
               }
               })
               console.log('withdraw tx success',tx)

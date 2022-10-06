@@ -122,8 +122,6 @@ pub mod patreon {
         //     &[ ]
         // )?;
 
-
-
         msg!("NFT transferred successfully.");
         
         msg!("Sale completed successfully!");
@@ -142,8 +140,30 @@ pub mod patreon {
          verify_details.owner = owner;
          verify_details.date=date;
          verify_details.token_address=token_address;
+        //  verify_details.fund_pda_wallet=fund_pda_wallet;
          Ok(())
     }
+
+    pub fn admin_details_registration(ctx:Context<RegisterAdminDetails>,name:String, description:String,contents:String,url:String,amount: u64,patreon_fund_address:Pubkey,owner:Pubkey)->ProgramResult{
+        
+        let all_details = &mut ctx.accounts.details;
+        all_details.name = name;
+        all_details.amount = amount;
+        all_details.description = description;
+        all_details.contents = contents;
+        all_details.url = url;
+        all_details.patreon_fund_address = patreon_fund_address;
+        all_details.owner = owner;
+        Ok(())
+    }
+
+    // name:String,
+    // description:String,
+    // contents:String,
+    // url:String,
+    // amount:u64,
+    // patreon_id:Pubkey,
+    // owner:Pubkey
 
 }
 
@@ -222,10 +242,19 @@ pub struct Initialisedstatepda<'info> {
 
 #[derive(Accounts)]
 pub struct VerifyPatreonDetails<'info,>{
-    #[account(init,payer=user,space=200)]
+    #[account(init,payer=user,space=9000)]
     pub verify_patreon_token_details:Account<'info,VerifyPatreonToken>,
     #[account(mut)]
     pub user:Signer<'info,>,
+    pub system_program:Program<'info,System>
+}
+
+#[derive(Accounts)]
+pub struct RegisterAdminDetails<'info,>{
+    #[account(init,payer=user,space=9000)]
+    pub details:Account<'info,AdminDetails>,
+    #[account(mut)]
+    pub user:Signer<'info>,
     pub system_program:Program<'info,System>
 }
 
@@ -236,9 +265,21 @@ pub struct VerifyPatreonToken{
     // amount:i64,
     //mediaURL:String,
     // PDA:String, //where we are transferring account 2 or more sol
+    // fund_pda_wallet:String,
     owner:Pubkey, //patreonkeypair
     date:i64,
     token_address:String, //newly created NFT address
+}
+
+#[account]
+pub struct AdminDetails{
+    name:String,
+    description:String,
+    contents:String,
+    url:String,
+    amount:u64,
+    patreon_fund_address:Pubkey,
+    owner:Pubkey
 }
 
 #[account]
