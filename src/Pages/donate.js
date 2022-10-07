@@ -161,7 +161,7 @@ export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl
       // tasks - Store the PDA (2sol walla), name, amount, description ,mediaurl ,token address, owner and seller and date in one record at rust and later to verify them
     };
 
-
+    
     const tokenVerify=async(mintA)=>{
       const provider = getProvider()
       const program = new Program(idl,programID,provider)
@@ -170,9 +170,9 @@ export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl
         let date = new Date( Math.floor(Date.now() / 1000)* 1000);
         date.setMonth(date.getMonth() + 1);
         date = Date.parse(date) / 1000;
-        const tx = await program.rpc.verifytoken(patreonNewkeyPair.publicKey,new BN(date),patreonFundAddressPDA+'-'+mintA,{
+        const tx = await program.rpc.verifyalltokens(patreonNewkeyPair.publicKey,(date).toString(),patreonFundAddressPDA+'-'+mintA,{
           accounts:{
-            verifyPatreonTokenDetails:patreonNewkeyPair.publicKey,
+            patreonTokenDetails:patreonNewkeyPair.publicKey,
             user:provider.publicKey,
             systemProgram:SystemProgram.programId
           },

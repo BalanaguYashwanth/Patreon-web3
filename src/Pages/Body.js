@@ -169,17 +169,15 @@ export const Body = ({walletAddress}) => {
       const provider = getProvider()
       const program = new Program(idl,programID,provider)
       try{
-        const datas = await program.account.verifyPatreonToken.all() //await program.account.verifyPatreonToken.all()//await connection.getProgramAccounts(programID)
-        // console.log(datas.length,allTokens.length)
+        const datas = await program.account.verifyPatreonTokenDetails.all() //await program.account.verifyPatreonToken.all()//await connection.getProgramAccounts(programID)
+       
         if(datas.length>0 && allTokens.length>0){
           for(let x in datas){
-            console.log(datas[x])
-            // console.log('now',  new Date( Date.now() * 1000);)
-            // console.log('verifytokens',datas[x]?.account.date.toNumber(),datas[x]?.account, datas[x]?.account.date.toNumber(),allTokens.includes(datas[x]?.account?.tokenAddress))
-            // console.log(Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber())
-            if(allTokens.includes(datas[x]?.account?.tokenAddress) && Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber() ) //check this condition again
+            // console.log('date',datas[x].account, datas[x].account.date, Number( datas[x].account.date))
+            // console.log((Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber()))
+            if(datas[x].account.tokenAddress.includes('-') && allTokens.includes(datas[x]?.account?.tokenAddress) && (Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber()) ) //check this condition again
             {
-              // console.log(datas[x]?.account.date.toNumber())
+              console.log(datas[x],datas[x]?.account.date.toNumber())
               setAllow(true)
             }
           }
@@ -189,6 +187,9 @@ export const Body = ({walletAddress}) => {
       }
     }
     //getDataFromVerifyPatreonTokenAccount()
+    // console.log('now',  new Date( Date.now() * 1000);)
+    // console.log('verifytokens',datas[x]?.account.date.toNumber(),datas[x]?.account, datas[x]?.account.date.toNumber(),allTokens.includes(datas[x]?.account?.tokenAddress))
+    // console.log(Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber())
    
 
     const getPatreonDetails = async () =>{
@@ -197,9 +198,14 @@ export const Body = ({walletAddress}) => {
       const program = new Program(idl,programID,provider)
       const datas =  await program.account.adminDetails.all()
       // console.log(datas)
+      // console.log(datas[i].account.time.toNumber(),datas[i].account.name)
       for(let i in datas){
-        alldatas.push(datas[i])
+        if(!((datas[i].account.name).toLowerCase().includes('test'))){
+          alldatas.push(datas[i])
+        }
       }
+      // console.log(alldatas)
+      const arrdata =alldatas.sort( (a,b)=> (b.account.time.toNumber())-(a.account.time.toNumber()))
       setMintAddress(alldatas)
     }
 

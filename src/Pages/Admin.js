@@ -114,14 +114,15 @@ export const Admin = () => {
         console.log('err',err)
       }
     }
+    // console.log(Math.floor(Date.now() / 1000))
     // console.log(patreonNewkeyPair.publicKey.toString())
     const registerDetails = async (campaignId) =>{
-      console.log(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(2),campaignId,walletAddress)
+      // console.log(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(2),campaignId,walletAddress)
       try{
         setMessage('Please approve for Finalize the transaction')
         const provider = getProvider()
         const program = new Program(idl,programID,provider)
-        const tx = await program.rpc.adminDetailsRegistration(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),campaignId,walletAddress,{
+        const tx = await program.rpc.adminDetailsRegistration(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),campaignId,walletAddress,new BN(Math.floor(Date.now() / 1000)),{
           accounts:{
             details:patreonNewkeyPair.publicKey,
             user:walletAddress,

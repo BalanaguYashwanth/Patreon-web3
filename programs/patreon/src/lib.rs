@@ -135,7 +135,7 @@ pub mod patreon {
         Ok(())
     }
 
-    pub fn verifytoken(ctx:Context<VerifyPatreonDetails>, owner:Pubkey,date:i64,token_address:String) -> ProgramResult{
+    pub fn verifytoken(ctx:Context<VerifyPatreonDetails>, owner:Pubkey,date:u64,token_address:String) -> ProgramResult{
          let verify_details  = &mut ctx.accounts.verify_patreon_token_details;
          verify_details.owner = owner;
          verify_details.date=date;
@@ -144,7 +144,16 @@ pub mod patreon {
          Ok(())
     }
 
-    pub fn admin_details_registration(ctx:Context<RegisterAdminDetails>,name:String, description:String,contents:String,url:String,amount: u64,patreon_fund_address:Pubkey,owner:Pubkey)->ProgramResult{
+    pub fn verifyalltokens(ctx:Context<VerifyPatreonDetailsAccount>, owner:Pubkey,date:String,token_address:String) -> ProgramResult{
+        let verify_details  = &mut ctx.accounts.patreon_token_details;
+        verify_details.owner = owner;
+        verify_details.date=date;
+        verify_details.token_address=token_address;
+       //  verify_details.fund_pda_wallet=fund_pda_wallet;
+        Ok(())
+   }
+
+    pub fn admin_details_registration(ctx:Context<RegisterAdminDetails>,name:String, description:String,contents:String,url:String,amount: u64,patreon_fund_address:Pubkey,owner:Pubkey,time:u64)->ProgramResult{
         
         let all_details = &mut ctx.accounts.details;
         all_details.name = name;
@@ -154,6 +163,7 @@ pub mod patreon {
         all_details.url = url;
         all_details.patreon_fund_address = patreon_fund_address;
         all_details.owner = owner;
+        all_details.time = time;
         Ok(())
     }
 
@@ -250,6 +260,15 @@ pub struct VerifyPatreonDetails<'info,>{
 }
 
 #[derive(Accounts)]
+pub struct VerifyPatreonDetailsAccount<'info,>{
+    #[account(init,payer=user,space=9000)]
+    pub patreon_token_details:Account<'info,VerifyPatreonTokenDetails>,
+    #[account(mut)]
+    pub user:Signer<'info,>,
+    pub system_program:Program<'info,System>
+}
+
+#[derive(Accounts)]
 pub struct RegisterAdminDetails<'info,>{
     #[account(init,payer=user,space=9000)]
     pub details:Account<'info,AdminDetails>,
@@ -267,9 +286,23 @@ pub struct VerifyPatreonToken{
     // PDA:String, //where we are transferring account 2 or more sol
     // fund_pda_wallet:String,
     owner:Pubkey, //patreonkeypair
-    date:i64,
+    date:u64,
     token_address:String, //newly created NFT address
 }
+
+#[account]
+pub struct VerifyPatreonTokenDetails{
+    // name:String,
+    // description:String,
+    // amount:i64,
+    //mediaURL:String,
+    // PDA:String, //where we are transferring account 2 or more sol
+    // fund_pda_wallet:String,
+    owner:Pubkey, //patreonkeypair
+    date:String,
+    token_address:String, //newly created NFT address
+}
+
 
 #[account]
 pub struct AdminDetails{
@@ -279,7 +312,8 @@ pub struct AdminDetails{
     url:String,
     amount:u64,
     patreon_fund_address:Pubkey,
-    owner:Pubkey
+    owner:Pubkey,
+    time:u64
 }
 
 #[account]
