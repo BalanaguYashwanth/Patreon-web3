@@ -26,7 +26,7 @@ export const Body = ({walletAddress}) => {
     const { solana } = window;
     const [link,setLink] = useState('') 
     const [mintAddress, setMintAddress] = useState([])
-    const [allow, setAllow] = useState(false)
+    const [allowUser, setAllowUser] = useState([])
      const getProvider = () => {
       //Creating a provider, the provider is authenication connection to solana
       const connection = new Connection(network, opts.preflightCommitment);
@@ -165,27 +165,31 @@ export const Body = ({walletAddress}) => {
     //setMintAddress(allTokens)
   // {getNFTParsedAccounts()}
     
-    const getDataFromVerifyPatreonTokenAccount = async(allTokens) =>{
+    const getDataFromVerifyPatreonTokenAccount = async(allWalletTokens) =>{
+      let filteredData=[]
       const provider = getProvider()
       const program = new Program(idl,programID,provider)
       try{
-        const datas = await program.account.verifyPatreonTokenDetails.all() //await program.account.verifyPatreonToken.all()//await connection.getProgramAccounts(programID)
+        const tokenDatas = await program.account.verifyPatreonTokenDetails.all() //await program.account.verifyPatreonToken.all()//await connection.getProgramAccounts(programID)
        
-        if(datas.length>0 && allTokens.length>0){
-          for(let x in datas){
-            // console.log('date',datas[x].account, datas[x].account.date, Number( datas[x].account.date))
-            // console.log((Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber()))
-            if(datas[x].account.tokenAddress.includes('-') && allTokens.includes(datas[x]?.account?.tokenAddress) && (Math.floor(Date.now() / 1000) < datas[x]?.account.date.toNumber()) ) //check this condition again
+        if(tokenDatas.length>0 && allWalletTokens.length>0){
+          for(let x in tokenDatas){
+            // console.log('information',tokenDatas[x]?.account?.tokenAddress.split('-')[1])
+            if(tokenDatas[x].account.tokenAddress.includes('-') && allWalletTokens.includes(tokenDatas[x]?.account?.tokenAddress.split('-')[1]) && (Math.floor(Date.now() / 1000) < Number(tokenDatas[x].account.date)) ) //check this condition again
             {
-              console.log(datas[x],datas[x]?.account.date.toNumber())
-              setAllow(true)
+              // console.log('hello',tokenDatas[x],tokenDatas[x]?.account.date)
+              filteredData.push(tokenDatas[x]?.account?.tokenAddress.split('-')[0])
             }
           }
+          setAllowUser(filteredData)
         }
       }catch(err){
         console.log(err)
       }
     }
+    
+    //mint.account.patreonFundAddress.toString()
+    // console.log((Math.floor(Date.now() / 1000) < tokenDatas[x]?.account.date.toNumber()))
     //getDataFromVerifyPatreonTokenAccount()
     // console.log('now',  new Date( Date.now() * 1000);)
     // console.log('verifytokens',datas[x]?.account.date.toNumber(),datas[x]?.account, datas[x]?.account.date.toNumber(),allTokens.includes(datas[x]?.account?.tokenAddress))
@@ -218,17 +222,26 @@ export const Body = ({walletAddress}) => {
       {
           mintAddress && mintAddress.map( (mint, index) =>(
               <div key={index}>
-                <div className="card bg-light mb-3 mx-auto" style={{maxWidth: "30rem"}}>
+                <div className="  card bg-light mb-3 mx-auto" style={{maxWidth: "30rem"}}>
                   <div className="card-header"> <b> <u>Patreon Wallet Address </u> </b> {mint.account.patreonFundAddress.toString()}</div>
                   <div className="card-body">
                     <h5 className="card-title"> Name - {mint.account.name}</h5>
                     <p className="card-text"> Description -  {mint.account.description}</p>
-                    {/* <p className="card-text"> {mint.account.contents}</p>
-                    <h5 className="card-title"> {mint.account.url}</h5> */}
                     <h5 className="card-title"> Amount - { mint.account.amount.toNumber() > LAMPORTS_PER_SOL ? mint.account.amount.toNumber()/LAMPORTS_PER_SOL :mint.account.amount.toNumber()   } SOL +{'0.5 SOL (for tx fees)'} </h5>
                     <p className="card-text"> Owner - {mint.account.owner.toString()} </p>
                     {/* <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> */}
-                    <Donate getProvider={getProvider} connection={connection} patreonFundAddressPDA={mint.account.patreonFundAddress.toString()} fundAmount={mint.account.amount.toNumber() > LAMPORTS_PER_SOL ? mint.account.amount.toNumber()/LAMPORTS_PER_SOL :mint.account.amount.toNumber() } Program={Program} idl={idl} programID={programID} patreonNewkeyPair={patreonNewkeyPair} walletAddress={walletAddress} SystemProgram={SystemProgram}  />
+                   { 
+                   
+                   !allowUser.includes(mint.account.patreonFundAddress.toString()) &&
+                   <Donate ownerAddress={mint.account.owner.toString()}  getProvider={getProvider} connection={connection} patreonFundAddressPDA={mint.account.patreonFundAddress.toString()} fundAmount={mint.account.amount.toNumber() > LAMPORTS_PER_SOL ? mint.account.amount.toNumber()/LAMPORTS_PER_SOL :mint.account.amount.toNumber() } Program={Program} idl={idl} programID={programID} patreonNewkeyPair={patreonNewkeyPair} walletAddress={walletAddress} SystemProgram={SystemProgram}  />
+                  }
+                    { 
+                     allowUser.includes(mint.account.patreonFundAddress.toString()) && <div className=" glass m-2 card bg-info mb-3 mx-auto">
+                      <b className='m-1' > 🥳 <u>   Successfully Unlocked the data </u> 🥳  </b>
+                        <b> Access</b>   <p className="card-text"> {mint.account.contents}</p>
+                        <b> SecretURL</b> <p className="card-title"> {mint.account.url}</p> 
+                      </div>
+                    }
                   </div>
                 </div>
               
@@ -250,7 +263,7 @@ export const Body = ({walletAddress}) => {
             )
         )} */}
         
-     { allow &&  <img src="https://i.pinimg.com/originals/13/01/7f/13017f759d2961d07a03190ef28286e7.jpg" />}
+     {/* { allowUser &&  <img src="https://i.pinimg.com/originals/13/01/7f/13017f759d2961d07a03190ef28286e7.jpg" />} */}
       {/* <button onClick={getNFTParsedAccounts}> getNFTParsedAccounts </button>
       <button onClick={getData}> getData </button> */}
       {/* <button onClick={getTransactions}> getTransactions </button>

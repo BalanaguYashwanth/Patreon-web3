@@ -122,7 +122,7 @@ export const Admin = () => {
         setMessage('Please approve for Finalize the transaction')
         const provider = getProvider()
         const program = new Program(idl,programID,provider)
-        const tx = await program.rpc.adminDetailsRegistration(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(patreonJson?.amount_contributed *  web3.LAMPORTS_PER_SOL),campaignId,walletAddress,new BN(Math.floor(Date.now() / 1000)),{
+        const tx = await program.rpc.adminDetailsRegistration(patreonJson.name,patreonJson.description,patreonJson.content,patreonJson.url,new BN(patreonJson?.amount_contributed ),campaignId,walletAddress,new BN(Math.floor(Date.now() / 1000)),{
           accounts:{
             details:patreonNewkeyPair.publicKey,
             user:walletAddress,

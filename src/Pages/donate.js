@@ -21,7 +21,7 @@ import {
 import { useState } from "react";
 
 //main purpose of this flow is - when user starts donate then it initiates i.e createPatreon and get the keys etc and sent to transfer token
-export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress,connection}) =>{
+export const Donate = ({ownerAddress,getProvider,Program,patreonFundAddressPDA,fundAmount,idl,programID,patreonNewkeyPair,SystemProgram,walletAddress,connection}) =>{
   // console.log(fundAmount)
     //get the public hard coded value from the admin, and call this donate from admin might be best rather than calling from body.js
     const [message, setMessage] = useState('')
@@ -204,7 +204,7 @@ export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl
     }
 
 
-
+   
     return(
         <div>
             {/* <button onClick={initialize}> Initialize </button> */} {/* need to replace with createPatreon but exists in another file in pages please check  */} 
@@ -212,8 +212,8 @@ export const Donate = ({getProvider,Program,patreonFundAddressPDA,fundAmount,idl
            {message && <mark>{message}</mark> }
             <br />
             {/* <button onClick={transfer_token}> Transfer </button> */}
-            <button onClick={donateWallet}> Donate </button>
-            <button onClick={withdrawWallet}> withdraw </button>
+           { <button onClick={donateWallet}> Join Now </button>}
+            {ownerAddress === walletAddress && <button onClick={withdrawWallet}> withdraw </button> }
             {/* <button onClick={tokenVerify}> tokenVerify </button> */}
         </div>
     )
