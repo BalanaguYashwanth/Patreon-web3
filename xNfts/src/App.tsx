@@ -34,7 +34,7 @@ export function App() {
           };
         }}
       >
-        <Tab.Screen name="HOME" component={Menu} />
+        <Tab.Screen name="HOME" component={Home} />
         <Tab.Screen name="MENU" component={Menu} />
       </Tab.Navigator>
     </View>

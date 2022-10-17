@@ -3,6 +3,7 @@ import ReactXnft, { Stack, Tab, Text, View } from "react-xnft";
 import { Claim } from './Claim';
 import { Lists } from './Lists';
 import {Pandas} from '../Menu/Pandas'
+import {HomeRedirect} from './HomeRedirect'
 
 ReactXnft.events.on("connect", () => {})
 
@@ -20,14 +21,10 @@ export const Home = () => {
             return {
               title: "claim",
             };
-          case "pandas":
+          case "menuList":
             return {
-              title: "pandas",
+              title: "Pandas Home",
             };
-          // case "menulist":
-          //   return {
-          //     title: "menulist",
-          //   };
           default:
             throw new Error("unknown route");
         }
@@ -43,10 +40,9 @@ export const Home = () => {
         component={(props: any) => <Claim {...props} />}
       />
       <Stack.Screen
-        name="pandas"
-        component={(props: any) => <Pandas {...props} />}
+        name="menuList"
+        component={(props: any) => <HomeRedirect {...props} />}
       />
-     
     </Stack.Navigator>
   );
 };

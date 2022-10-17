@@ -26,7 +26,7 @@ export const UnStakeDetail = () => {
         <TextField placeholder="Enter amount to unstake" value={maxFlag ? dust : '' } style={{ margin:'10px'}}/>
         <Button onClick={()=>setMaxFlag(!maxFlag)}>MAX </Button>
       </View>
-      <Button onClick={()=>nav.push('gariStaking')}> UnStake Now</Button>
+      <Button onClick={()=>nav.pop()}> UnStake Now</Button>
     </View>
   );
 };

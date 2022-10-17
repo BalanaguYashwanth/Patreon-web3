@@ -49,7 +49,7 @@ export const StakeDetail = () => {
         </Text>
       </View>
 
-      <Button onClick={()=>nav.push('gariStaking')}> Stake Now</Button>
+      <Button onClick={()=>nav.pop()}> Stake Now</Button>
     </View>
   );
 };

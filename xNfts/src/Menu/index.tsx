@@ -9,13 +9,14 @@ import { UserHistory } from './UserHistory';
 import { PandasDetail } from './pandasDetail';
 import { StakeDetail } from './stakeDetail';
 import { UnStakeDetail } from './unStakeDetail';
+import { MenuRedirect } from './MenuRedirect';
 
 ReactXnft.events.on("connect", () => {})
 
 export const Menu = () => {
   return (
     <Stack.Navigator
-      initialRoute={{ name: "menuList" }}
+      initialRoute={{ name: "list" }}
       options={({ route }) => {
         switch (route.name) {
           case "menuList":
@@ -24,7 +25,7 @@ export const Menu = () => {
             };
           case "pandas":
             return {
-              title: "pandas",
+              title: "Panda NFTs",
             };
           case "pandasDetail":
             return{
@@ -53,6 +54,10 @@ export const Menu = () => {
           case "faq":
             return{
               title:'FAQs'
+            }
+          case 'list':
+            return{
+              title:'Menu Redirect'
             }
           default:
             throw new Error("unknown route");
@@ -95,6 +100,10 @@ export const Menu = () => {
        <Stack.Screen
         name="unStakedDetail"
         component={(props: any) => <UnStakeDetail {...props} />}
+      />
+      <Stack.Screen
+        name="list"
+        component={(props: any) => <MenuRedirect {...props} />}
       />
     </Stack.Navigator>
   );
